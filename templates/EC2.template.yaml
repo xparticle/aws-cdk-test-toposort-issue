@@ -1,0 +1,133 @@
+Resources:
+  SecurityGroupDD263621:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow ssh access to ec2 instances
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          Description: allow ssh access from the world
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+        - CidrIp: 10.0.0.0/16
+          Description: allow http access from the vpc CIDR
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+      VpcId:
+        Fn::ImportValue: VPC:TheVPCVpcIdD346CDBA
+    Metadata:
+      aws:cdk:path: EC2/SecurityGroup/Resource
+  ASGInstanceSecurityGroup0525485D:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EC2/ASG/InstanceSecurityGroup
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      SecurityGroupIngress: []
+      Tags:
+        - Key: Name
+          Value: EC2/ASG
+      VpcId:
+        Fn::ImportValue: VPC:TheVPCVpcIdD346CDBA
+    Metadata:
+      aws:cdk:path: EC2/ASG/InstanceSecurityGroup/Resource
+  ASGInstanceRoleE263A41B:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                Fn::Join:
+                  - ""
+                  - - ec2.
+                    - Ref: AWS::URLSuffix
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: EC2/ASG/InstanceRole/Resource
+  ASGInstanceProfile0A2834D7:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - Ref: ASGInstanceRoleE263A41B
+    Metadata:
+      aws:cdk:path: EC2/ASG/InstanceProfile
+  ASGLaunchConfigC00AF12B:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: ami-0de53d8956e8dcf80
+      InstanceType: t2.micro
+      IamInstanceProfile:
+        Ref: ASGInstanceProfile0A2834D7
+      SecurityGroups:
+        - Fn::GetAtt:
+            - ASGInstanceSecurityGroup0525485D
+            - GroupId
+        - Fn::GetAtt:
+            - SecurityGroupDD263621
+            - GroupId
+      UserData:
+        Fn::Base64: >-
+          #!/bin/bash
+
+          curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash
+
+          . /.nvm/nvm.sh
+
+          export NVM_DIR='/.nvm'
+
+          nvm install node
+
+          yum -y install git
+
+          cd /home/ec2-user
+
+          git clone https://github.com/xparticle/nodejs_hello_world.git hello_world
+
+          cd hello_world
+
+          npm start
+    DependsOn:
+      - ASGInstanceRoleE263A41B
+    Metadata:
+      aws:cdk:path: EC2/ASG/LaunchConfig
+  ASG46ED3070:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      MaxSize: "1"
+      MinSize: "1"
+      DesiredCapacity: "1"
+      LaunchConfigurationName:
+        Ref: ASGLaunchConfigC00AF12B
+      Tags:
+        - Key: Name
+          PropagateAtLaunch: true
+          Value: EC2/ASG
+      TargetGroupARNs:
+        - Fn::ImportValue: NLB:ExportsOutputRefLBapi1listenerService1Group08CC0D1B06253457
+        - Fn::ImportValue: NLB:ExportsOutputRefLBapi2listenerService2Group1BFE736D62692502
+        - Fn::ImportValue: NLB:ExportsOutputRefLBapi3listenerService3Group5B371CC32ADF98B4
+      VPCZoneIdentifier:
+        - Fn::Select:
+            - 0
+            - Fn::Split:
+                - ","
+                - Fn::ImportValue: VPC:TheVPCPrivateSubnetIDsE53B48B1
+    UpdatePolicy:
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: true
+    Metadata:
+      aws:cdk:path: EC2/ASG/ASG
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Modules: aws-cdk=0.29.0,@aws-cdk/assets=0.29.0,@aws-cdk/aws-apigateway=0.29.0,@aws-cdk/aws-autoscaling=0.29.0,@aws-cdk/aws-autoscaling-common=0.29.0,@aws-cdk/aws-cloudwatch=0.29.0,@aws-cdk/aws-codedeploy-api=0.29.0,@aws-cdk/aws-ec2=0.29.0,@aws-cdk/aws-elasticloadbalancingv2=0.29.0,@aws-cdk/aws-events=0.29.0,@aws-cdk/aws-iam=0.29.0,@aws-cdk/aws-kms=0.29.0,@aws-cdk/aws-lambda=0.29.0,@aws-cdk/aws-s3=0.29.0,@aws-cdk/aws-s3-notifications=0.29.0,@aws-cdk/aws-sqs=0.29.0,@aws-cdk/cdk=0.29.0,@aws-cdk/cx-api=0.29.0,@aws-cdk/region-info=0.29.0,jsii-runtime=node.js/v11.2.0

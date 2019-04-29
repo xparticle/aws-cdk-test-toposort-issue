@@ -1,0 +1,122 @@
+Resources:
+  callprivateapiServiceRole9B0DED38:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                Fn::Join:
+                  - ""
+                  - - lambda.
+                    - Ref: AWS::URLSuffix
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    Metadata:
+      aws:cdk:path: LAMBDA/call_private_api/ServiceRole/Resource
+  callprivateapi0AF97245:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: >-
+          const https = require('https');
+
+
+          /**
+           * Pass the data to send as `event.data`, and the request options as
+           * `event.options`. For more information see the HTTPS module documentation
+           * at https://nodejs.org/api/https.html.
+           *
+           * Will succeed with the response body.
+           */
+          exports.handler = (event, context, callback) => {
+            
+            console.log("reached this")
+            var options = {
+              hostname: process.env.vpceid,
+              port: 443,
+              path: '/prod/api1/somefoo/',
+              method: 'GET',
+              secureProtocol: "TLSv1_2_method",
+              headers: {
+                'Host': process.env.apiid+'.execute-api.'+process.env.AWS_REGION+'.amazonaws.com'
+                
+              }
+            }
+
+              https.get(options, (resp) => {
+                let data = '';
+              
+                // A chunk of data has been recieved.
+                resp.on('data', (chunk) => {
+                  data += chunk;
+                });
+              
+                // The whole response has been received. Print out the result.
+                resp.on('end', () => {
+                  console.log(data);
+                  callback(null, data);
+                });
+              
+              }).on("error", (err) => {
+                console.log("Error: " + err.message);
+                callback("Error is this");
+              });    
+
+              
+
+              
+          };
+      Handler: index.handler
+      Role:
+        Fn::GetAtt:
+          - callprivateapiServiceRole9B0DED38
+          - Arn
+      Runtime: nodejs8.10
+      Environment:
+        Variables:
+          apiid:
+            Fn::ImportValue: APIGW:apiRestApiId340BFB9A
+          vpceid: "#{Token[apigw_vpc_endpoint.DnsEntries.102]}"
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::ImportValue: VPC:ExportsOutputFnGetAttSecurityGroupLambda62301DB3GroupIdE7297A48
+        SubnetIds:
+          - Fn::Select:
+              - 0
+              - Fn::Split:
+                  - ","
+                  - Fn::ImportValue: VPC:TheVPCPrivateSubnetIDsE53B48B1
+    DependsOn:
+      - callprivateapiServiceRole9B0DED38
+    Metadata:
+      aws:cdk:path: LAMBDA/call_private_api/Resource
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Modules: aws-cdk=0.29.0,@aws-cdk/assets=0.29.0,@aws-cdk/aws-apigateway=0.29.0,@aws-cdk/aws-autoscaling=0.29.0,@aws-cdk/aws-autoscaling-common=0.29.0,@aws-cdk/aws-cloudwatch=0.29.0,@aws-cdk/aws-codedeploy-api=0.29.0,@aws-cdk/aws-ec2=0.29.0,@aws-cdk/aws-elasticloadbalancingv2=0.29.0,@aws-cdk/aws-events=0.29.0,@aws-cdk/aws-iam=0.29.0,@aws-cdk/aws-kms=0.29.0,@aws-cdk/aws-lambda=0.29.0,@aws-cdk/aws-s3=0.29.0,@aws-cdk/aws-s3-notifications=0.29.0,@aws-cdk/aws-sqs=0.29.0,@aws-cdk/cdk=0.29.0,@aws-cdk/cx-api=0.29.0,@aws-cdk/region-info=0.29.0,jsii-runtime=node.js/v11.2.0
+Outputs:
+  callprivateapiFunctionArn8AD1FFB6:
+    Value:
+      Fn::GetAtt:
+        - callprivateapi0AF97245
+        - Arn
+    Export:
+      Name: LAMBDA:callprivateapiFunctionArn8AD1FFB6
+  callprivateapiSecurityGroupId052703DA:
+    Value:
+      Fn::ImportValue: VPC:ExportsOutputFnGetAttSecurityGroupLambda62301DB3GroupIdE7297A48
+    Export:
+      Name: LAMBDA:callprivateapiSecurityGroupId052703DA

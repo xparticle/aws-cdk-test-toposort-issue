@@ -1,0 +1,254 @@
+Resources:
+  vpclink1E09082EC:
+    Type: AWS::ApiGateway::VpcLink
+    Properties:
+      Name: testthisone
+      TargetArns:
+        - Fn::ImportValue: NLB:LBLoadBalancerArn4723B1BD
+      Description: may be this
+    Metadata:
+      aws:cdk:path: APIGW/vpclink1/Resource
+  apiC8550315:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      EndpointConfiguration:
+        Types:
+          - PRIVATE
+      Name: api
+      Policy:
+        Statement:
+          - Action: execute-api:Invoke
+            Condition:
+              StringNotEquals:
+                aws:SourceVpce:
+                  Fn::ImportValue: VPC:ExportsOutputRefapigwvpcendpoint6FF15B99
+            Effect: Deny
+            Principal: "*"
+            Resource: execute-api:/*
+          - Action: execute-api:Invoke
+            Effect: Allow
+            Principal: "*"
+            Resource: execute-api:/*
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: APIGW/api/Resource
+  apiDeployment149F12941ade94a3ce28d725d4ec91b47d225649:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId:
+        Ref: apiC8550315
+      Description: Automatically created by the RestApi construct
+    DependsOn:
+      - apiANYB3DF8C3C
+      - apiapi1proxyANY52CEA380
+      - apiapi1proxyEB3347B2
+      - apiapi123B2CF66
+      - apiapi2proxyANY83D944E4
+      - apiapi2proxy92BFD378
+      - apiapi203BCBB35
+      - apiapi3proxyANY687E2BE4
+      - apiapi3proxyB618031E
+      - apiapi362339D9A
+    Metadata:
+      aws:cdk:path: APIGW/api/Deployment/Resource
+  apiDeploymentStageprod896C8101:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId:
+        Ref: apiC8550315
+      DeploymentId:
+        Ref: apiDeployment149F12941ade94a3ce28d725d4ec91b47d225649
+      StageName: prod
+    Metadata:
+      aws:cdk:path: APIGW/api/DeploymentStage.prod/Resource
+  apiCloudWatchRoleAC81D93E:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                Fn::Join:
+                  - ""
+                  - - apigateway.
+                    - Ref: AWS::URLSuffix
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+    Metadata:
+      aws:cdk:path: APIGW/api/CloudWatchRole/Resource
+  apiAccount57E28B43:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn:
+        Fn::GetAtt:
+          - apiCloudWatchRoleAC81D93E
+          - Arn
+    DependsOn:
+      - apiC8550315
+    Metadata:
+      aws:cdk:path: APIGW/api/Account
+  apiANYB3DF8C3C:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: ANY
+      ResourceId:
+        Fn::GetAtt:
+          - apiC8550315
+          - RootResourceId
+      RestApiId:
+        Ref: apiC8550315
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+    Metadata:
+      aws:cdk:path: APIGW/api/Default/ANY/Resource
+  apiapi123B2CF66:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - apiC8550315
+          - RootResourceId
+      PathPart: api1
+      RestApiId:
+        Ref: apiC8550315
+    Metadata:
+      aws:cdk:path: APIGW/api/Default/api1/Resource
+  apiapi1proxyEB3347B2:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref: apiapi123B2CF66
+      PathPart: "{proxy+}"
+      RestApiId:
+        Ref: apiC8550315
+    Metadata:
+      aws:cdk:path: APIGW/api/Default/api1/{proxy+}/Resource
+  apiapi1proxyANY52CEA380:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: ANY
+      ResourceId:
+        Ref: apiapi1proxyEB3347B2
+      RestApiId:
+        Ref: apiC8550315
+      AuthorizationType: NONE
+      Integration:
+        ConnectionId:
+          Ref: vpclink1E09082EC
+        ConnectionType: VPC_LINK
+        IntegrationHttpMethod: GET
+        Type: HTTP_PROXY
+        Uri: http://localhost.com:2000/
+    Metadata:
+      aws:cdk:path: APIGW/api/Default/api1/{proxy+}/ANY/Resource
+  apiapi203BCBB35:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - apiC8550315
+          - RootResourceId
+      PathPart: api2
+      RestApiId:
+        Ref: apiC8550315
+    Metadata:
+      aws:cdk:path: APIGW/api/Default/api2/Resource
+  apiapi2proxy92BFD378:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref: apiapi203BCBB35
+      PathPart: "{proxy+}"
+      RestApiId:
+        Ref: apiC8550315
+    Metadata:
+      aws:cdk:path: APIGW/api/Default/api2/{proxy+}/Resource
+  apiapi2proxyANY83D944E4:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: ANY
+      ResourceId:
+        Ref: apiapi2proxy92BFD378
+      RestApiId:
+        Ref: apiC8550315
+      AuthorizationType: NONE
+      Integration:
+        ConnectionId:
+          Ref: vpclink1E09082EC
+        ConnectionType: VPC_LINK
+        IntegrationHttpMethod: GET
+        Type: HTTP_PROXY
+        Uri: http://localhost.com:3000/
+    Metadata:
+      aws:cdk:path: APIGW/api/Default/api2/{proxy+}/ANY/Resource
+  apiapi362339D9A:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - apiC8550315
+          - RootResourceId
+      PathPart: api3
+      RestApiId:
+        Ref: apiC8550315
+    Metadata:
+      aws:cdk:path: APIGW/api/Default/api3/Resource
+  apiapi3proxyB618031E:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref: apiapi362339D9A
+      PathPart: "{proxy+}"
+      RestApiId:
+        Ref: apiC8550315
+    Metadata:
+      aws:cdk:path: APIGW/api/Default/api3/{proxy+}/Resource
+  apiapi3proxyANY687E2BE4:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: ANY
+      ResourceId:
+        Ref: apiapi3proxyB618031E
+      RestApiId:
+        Ref: apiC8550315
+      AuthorizationType: NONE
+      Integration:
+        ConnectionId:
+          Ref: vpclink1E09082EC
+        ConnectionType: VPC_LINK
+        IntegrationHttpMethod: GET
+        Type: HTTP_PROXY
+        Uri: http://localhost.com:4000/
+    Metadata:
+      aws:cdk:path: APIGW/api/Default/api3/{proxy+}/ANY/Resource
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Modules: aws-cdk=0.29.0,@aws-cdk/assets=0.29.0,@aws-cdk/aws-apigateway=0.29.0,@aws-cdk/aws-autoscaling=0.29.0,@aws-cdk/aws-autoscaling-common=0.29.0,@aws-cdk/aws-cloudwatch=0.29.0,@aws-cdk/aws-codedeploy-api=0.29.0,@aws-cdk/aws-ec2=0.29.0,@aws-cdk/aws-elasticloadbalancingv2=0.29.0,@aws-cdk/aws-events=0.29.0,@aws-cdk/aws-iam=0.29.0,@aws-cdk/aws-kms=0.29.0,@aws-cdk/aws-lambda=0.29.0,@aws-cdk/aws-s3=0.29.0,@aws-cdk/aws-s3-notifications=0.29.0,@aws-cdk/aws-sqs=0.29.0,@aws-cdk/cdk=0.29.0,@aws-cdk/cx-api=0.29.0,@aws-cdk/region-info=0.29.0,jsii-runtime=node.js/v11.2.0
+Outputs:
+  apiEndpoint9349E63C:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: apiC8550315
+          - .execute-api.
+          - Ref: AWS::Region
+          - "."
+          - Ref: AWS::URLSuffix
+          - /
+          - Ref: apiDeploymentStageprod896C8101
+          - /
+  apiRestApiId340BFB9A:
+    Value:
+      Ref: apiC8550315
+    Export:
+      Name: APIGW:apiRestApiId340BFB9A

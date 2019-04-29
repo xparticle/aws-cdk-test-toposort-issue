@@ -1,0 +1,243 @@
+Resources:
+  TheVPC92636AB0:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: AwsCdkTestToposortIssueStack/TheVPC
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/Resource
+  TheVPCApplicationSubnet1SubnetA74226FF:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.0.0/26
+      VpcId:
+        Ref: TheVPC92636AB0
+      AvailabilityZone: us-east-1a
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: AwsCdkTestToposortIssueStack/TheVPC/ApplicationSubnet1
+        - Key: aws-cdk:subnet-name
+          Value: Application
+        - Key: aws-cdk:subnet-type
+          Value: Private
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/ApplicationSubnet1/Subnet
+  TheVPCApplicationSubnet1RouteTable0FE2A3D8:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: TheVPC92636AB0
+      Tags:
+        - Key: Name
+          Value: AwsCdkTestToposortIssueStack/TheVPC/ApplicationSubnet1
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/ApplicationSubnet1/RouteTable
+  TheVPCApplicationSubnet1RouteTableAssociationBE311466:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: TheVPCApplicationSubnet1RouteTable0FE2A3D8
+      SubnetId:
+        Ref: TheVPCApplicationSubnet1SubnetA74226FF
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/ApplicationSubnet1/RouteTableAssociation
+  TheVPCApplicationSubnet1DefaultRouteC6DE6E60:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: TheVPCApplicationSubnet1RouteTable0FE2A3D8
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: TheVPCPublicSubnet1NATGatewayC61D892B
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/ApplicationSubnet1/DefaultRoute
+  TheVPCPublicSubnet1Subnet770D4FF2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.0.64/26
+      VpcId:
+        Ref: TheVPC92636AB0
+      AvailabilityZone: us-east-1a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: AwsCdkTestToposortIssueStack/TheVPC/PublicSubnet1
+        - Key: aws-cdk:subnet-name
+          Value: Public
+        - Key: aws-cdk:subnet-type
+          Value: Public
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/PublicSubnet1/Subnet
+  TheVPCPublicSubnet1RouteTable17DA183D:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: TheVPC92636AB0
+      Tags:
+        - Key: Name
+          Value: AwsCdkTestToposortIssueStack/TheVPC/PublicSubnet1
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/PublicSubnet1/RouteTable
+  TheVPCPublicSubnet1RouteTableAssociationE5186D77:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: TheVPCPublicSubnet1RouteTable17DA183D
+      SubnetId:
+        Ref: TheVPCPublicSubnet1Subnet770D4FF2
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/PublicSubnet1/RouteTableAssociation
+  TheVPCPublicSubnet1DefaultRoute6D26543F:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: TheVPCPublicSubnet1RouteTable17DA183D
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: TheVPCIGWFA25CC08
+    DependsOn:
+      - TheVPCVPCGWC9B93E30
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/PublicSubnet1/DefaultRoute
+  TheVPCPublicSubnet1EIP4412F690:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/PublicSubnet1/EIP
+  TheVPCPublicSubnet1NATGatewayC61D892B:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+          - TheVPCPublicSubnet1EIP4412F690
+          - AllocationId
+      SubnetId:
+        Ref: TheVPCPublicSubnet1Subnet770D4FF2
+      Tags:
+        - Key: Name
+          Value: AwsCdkTestToposortIssueStack/TheVPC/PublicSubnet1
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/PublicSubnet1/NATGateway
+  TheVPCIGWFA25CC08:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: AwsCdkTestToposortIssueStack/TheVPC
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/IGW
+  TheVPCVPCGWC9B93E30:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: TheVPC92636AB0
+      InternetGatewayId:
+        Ref: TheVPCIGWFA25CC08
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/VPCGW
+  TheVPCVpnGateway97BC18B3:
+    Type: AWS::EC2::VPNGateway
+    Properties:
+      Type: ipsec.1
+      Tags:
+        - Key: Name
+          Value: AwsCdkTestToposortIssueStack/TheVPC
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/VpnGateway
+  TheVPCVPCVPNGW7C629261:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: TheVPC92636AB0
+      VpnGatewayId:
+        Ref: TheVPCVpnGateway97BC18B3
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/VPCVPNGW
+  TheVPCRoutePropagation577346C9:
+    Type: AWS::EC2::VPNGatewayRoutePropagation
+    Properties:
+      RouteTableIds:
+        - Ref: TheVPCApplicationSubnet1RouteTable0FE2A3D8
+      VpnGatewayId:
+        Ref: TheVPCVpnGateway97BC18B3
+    DependsOn:
+      - TheVPCVPCVPNGW7C629261
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/TheVPC/RoutePropagation
+  SecurityGroupVpceApigwC8B7444F:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow ssh access to ec2 instances
+      SecurityGroupEgress:
+        - CidrIp: 255.255.255.255/32
+          Description: Disallow all traffic
+          FromPort: 252
+          IpProtocol: icmp
+          ToPort: 86
+      SecurityGroupIngress: []
+      VpcId:
+        Ref: TheVPC92636AB0
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/SecurityGroupVpceApigw/Resource
+  SecurityGroupLambda62301DB3:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Lambda Security Group
+      SecurityGroupEgress:
+        - CidrIp: 255.255.255.255/32
+          Description: Disallow all traffic
+          FromPort: 252
+          IpProtocol: icmp
+          ToPort: 86
+      SecurityGroupIngress: []
+      VpcId:
+        Ref: TheVPC92636AB0
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/SecurityGroupLambda/Resource
+  apigwvpcendpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: com.amazonaws.us-east-1.execute-api
+      VpcId:
+        Ref: TheVPC92636AB0
+      SecurityGroupIds:
+        - Fn::GetAtt:
+            - SecurityGroupVpceApigwC8B7444F
+            - GroupId
+      SubnetIds:
+        - Ref: TheVPCApplicationSubnet1SubnetA74226FF
+      VpcEndpointType: Interface
+    Metadata:
+      aws:cdk:path: AwsCdkTestToposortIssueStack/apigw_vpc_endpoint
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Modules: aws-cdk=0.29.0,@aws-cdk/aws-cloudwatch=0.29.0,@aws-cdk/aws-codedeploy-api=0.29.0,@aws-cdk/aws-ec2=0.29.0,@aws-cdk/aws-elasticloadbalancingv2=0.29.0,@aws-cdk/aws-iam=0.29.0,@aws-cdk/cdk=0.29.0,@aws-cdk/cx-api=0.29.0,@aws-cdk/region-info=0.29.0,jsii-runtime=node.js/v11.2.0
+Outputs:
+  TheVPCPublicSubnetIDs34A93164:
+    Value:
+      Ref: TheVPCPublicSubnet1Subnet770D4FF2
+    Export:
+      Name: AwsCdkTestToposortIssueStack:TheVPCPublicSubnetIDs34A93164
+  TheVPCPrivateSubnetIDsE53B48B1:
+    Value:
+      Ref: TheVPCApplicationSubnet1SubnetA74226FF
+    Export:
+      Name: AwsCdkTestToposortIssueStack:TheVPCPrivateSubnetIDsE53B48B1
+  TheVPCVpnGatewayId86251C09:
+    Value:
+      Ref: TheVPCVpnGateway97BC18B3
+    Export:
+      Name: AwsCdkTestToposortIssueStack:TheVPCVpnGatewayId86251C09
+  TheVPCVpcIdD346CDBA:
+    Value:
+      Ref: TheVPC92636AB0
+    Export:
+      Name: AwsCdkTestToposortIssueStack:TheVPCVpcIdD346CDBA
